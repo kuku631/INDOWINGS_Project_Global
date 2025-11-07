@@ -71,3 +71,6 @@ def open_output_folder():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    @app.route('/download-frame/<filename>')
+def download_frame(filename):
+    return send_from_directory(os.path.join('static', 'sr_frames'), filename)
