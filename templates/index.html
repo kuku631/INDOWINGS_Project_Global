@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INDOWINGS Super Resolution</title>
+
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #74ABE2, #142b52);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 20px;
+      border-radius: 20px;
+      width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      width: 120px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    /* 🖤 Classy 3D Title */
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.8em;
+      font-weight: 900;
+      color: #000;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      /* 3D layered shadow effect */
+      text-shadow:
+        1px 1px 0 #444,
+        2px 2px 0 #333,
+        3px 3px 2px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    h1:hover {
+      transform: scale(1.05);
+      text-shadow:
+        2px 2px 3px rgba(0, 0, 0, 0.6),
+        3px 3px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    input, select, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    input[type="file"], select {
+      background-color: rgba(255,255,255,0.8);
+    }
+
+    button {
+      background-color: #00c3ff;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0098cc;
+      transform: scale(1.03);
+    }
+
+    .progress-container {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #progress {
+      background: #00ffb3;
+      height: 20px;
+      width: 0%;
+      text-align: center;
+      color: black;
+      font-weight: bold;
+      transition: width 0.4s ease;
+    }
+
+    #status {
+      margin-top: 8px;
+      color: #fff;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="INDOWINGS Logo" class="logo" />
+    <h1>INDOWINGS Super Resolution</h1>
+
+    <form id="uploadForm">
+      <input type="file" id="fileInput" name="files[]" multiple required />
+      <select id="outputChoice" name="output_folder">
+        <option value="INDOWINGS_OUTPUT">INDOWINGS_OUTPUT</option>
+        <option value="sr_frames">sr_frames</option>
+      </select>
+      <button type="submit">Upload & Process</button>
+    </form>
+
+    <div class="progress-container">
+      <div id="progress">0%</div>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const progressBar = document.getElementById('progress');
+    const statusDiv = document.getElementById('status');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const files = document.getElementById('fileInput').files;
+      if (files.length === 0) return alert("Select at least one video or image!");
+
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files[]', files[i]);
+      }
+      formData.append('output_folder', document.getElementById('outputChoice').value);
+
+      progressBar.style.width = "0%";
+      progressBar.innerText = "0%";
+      statusDiv.innerText = "⏳ Uploading...";
+
+      try {
+        const response = await fetch('/upload', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (data.status !== 'success') {
+          alert("❌ Error: " + data.message);
+          return;
+        }
+
+        progressBar.style.width = "100%";
+        progressBar.innerText = "100%";
+        statusDiv.innerText = "✅ Processing Complete!";
+      } catch (err) {
+        console.error(err);
+        alert("❌ Something went wrong!");
+      }
+    });
+  </script>
+</body>
+</html>
