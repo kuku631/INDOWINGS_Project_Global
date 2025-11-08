@@ -6,15 +6,15 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Detect Render vs Local
+# Dynamic path setup for Render vs Local
 if os.environ.get('RENDER'):
-    BASE_OUTPUT_DIR = '/tmp/INDOWINGS_OUTPUT'
+    BASE_OUTPUT_ROOT = '/tmp'
     UPLOAD_FOLDER = '/tmp/uploads'
 else:
-    BASE_OUTPUT_DIR = os.path.join(os.getcwd(), 'INDOWINGS_OUTPUT')
+    BASE_OUTPUT_ROOT = os.path.join(os.getcwd(), 'INDOWINGS_OUTPUT')
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 
-os.makedirs(BASE_OUTPUT_DIR, exist_ok=True)
+os.makedirs(BASE_OUTPUT_ROOT, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
@@ -25,11 +25,11 @@ def index():
 def upload_files():
     try:
         files = request.files.getlist('files[]')
-        output_choice = request.form.get('output_folder', 'INDOWINGS_OUTPUT')
+        output_choice = request.form.get('output_folder', 'video_input_frames')
         if not files:
             return jsonify({'status': 'error', 'message': 'No files uploaded!'})
 
-        output_path = os.path.join(BASE_OUTPUT_DIR, output_choice)
+        output_path = os.path.join(BASE_OUTPUT_ROOT, output_choice)
         os.makedirs(output_path, exist_ok=True)
         sr_urls = []
 
@@ -38,7 +38,6 @@ def upload_files():
             upload_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(upload_path)
 
-            # Process: extract frames
             video_cap = cv2.VideoCapture(upload_path)
             frame_dir = os.path.join(output_path, os.path.splitext(filename)[0] + '_frames')
             os.makedirs(frame_dir, exist_ok=True)
@@ -61,16 +60,13 @@ def upload_files():
 
 @app.route('/download/<output_choice>/<folder>')
 def download_folder(output_choice, folder):
-    folder_path = os.path.join(BASE_OUTPUT_DIR, output_choice, folder)
+    folder_path = os.path.join(BASE_OUTPUT_ROOT, output_choice, folder)
     return send_from_directory(folder_path, '')
 
 @app.route('/open-output-folder', methods=['GET'])
 def open_output_folder():
-    dirs = os.listdir(BASE_OUTPUT_DIR)
+    dirs = os.listdir(BASE_OUTPUT_ROOT)
     return jsonify({'folders': dirs})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    @app.route('/download-frame/<filename>')
-def download_frame(filename):
-    return send_from_directory(os.path.join('static', 'sr_frames'), filename)

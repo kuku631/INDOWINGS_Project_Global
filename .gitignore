@@ -1,5 +1,5 @@
 venv/
 __pycache__/
-*.pyc
-INDOWINGS_OUTPUT/
 uploads/
+INDOWINGS_OUTPUT/
+*.pyc
